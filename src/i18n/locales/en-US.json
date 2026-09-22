@@ -481,6 +481,28 @@
       "modeTooltip": "FM Mode & Scene",
       "modeSettingsTip": "Select preferred recommendation mode and scene"
     },
+    "listenTogether": {
+      "title": "Listen Together",
+      "idle": "Not in a room",
+      "listening": "{n} listening together",
+      "listeningNow": "Listening together",
+      "hint": "Share half your headphones. Create a room and send the NetEase invitation link, or paste one to join",
+      "placeholder": "Invitation link or room ID",
+      "create": "Create room",
+      "join": "Join room",
+      "copy": "Copy invite",
+      "leave": "Leave room",
+      "toast": {
+        "created": "Listen Together room created",
+        "joined": "Joined Listen Together",
+        "left": "Left Listen Together",
+        "restored": "Listening together",
+        "remoteProgress": "The other listener changed the position",
+        "remoteTrack": "The other listener changed the song",
+        "remotePlay": "The other listener started playback",
+        "remotePause": "The other listener paused playback"
+      }
+    },
     "lyricOffset": {
       "title": "Lyric Offset",
       "hint": "Positive values advance lyrics, in milliseconds"

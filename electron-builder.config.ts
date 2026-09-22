@@ -187,7 +187,7 @@ const config: Configuration = {
   },
   publish: {
     provider: "github",
-    owner: "SPlayer-Dev",
+    owner: "MiaM1ku",
     repo: "SPlayer-Next",
     channel: updateChannel,
   },

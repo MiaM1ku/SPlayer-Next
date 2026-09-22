@@ -11,6 +11,7 @@ import * as abLoop from "@/services/abLoop";
 import * as cacheScheduler from "@/services/cacheScheduler";
 import { setDeviceVolume } from "@/services/deviceVolume";
 import * as playStats from "./stats";
+import { isAutoAdvanceBlocked, noteNaturalEnd } from "./listenTogetherState";
 import {
   applySavedVolumeForActiveDevice,
   getActiveDeviceId,
@@ -40,11 +41,14 @@ const finishCurrentTrack = async (): Promise<void> => {
   endedGuard = true;
   try {
     const stopByTimer = autoClose.onTrackEnded();
+    // 一起听进房后不在本地自动切歌或单曲循环，把自然结束交给房间同步
+    if (isAutoAdvanceBlocked()) {
+      if (!stopByTimer && noteNaturalEnd()) playStats.onTrackEnded(false);
+      return;
+    }
     // FM 模式跳过
     const repeatOne = status.repeatMode === "one" && !status.fmMode;
-    // 结算播放统计
     playStats.onTrackEnded(repeatOne && !stopByTimer);
-    // 定时关闭"等本曲结束"模式
     if (stopByTimer) return;
     // 单曲循环：seek 回开头继续播放
     if (repeatOne) {

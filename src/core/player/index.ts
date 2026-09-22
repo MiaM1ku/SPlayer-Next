@@ -26,6 +26,9 @@ import {
   scheduleNextTrackPreload,
 } from "@/services/nextTrackPreloader";
 import { installPlayStats } from "./stats";
+import { useListenTogetherStore } from "@/stores/listenTogether";
+import { bindListenTogetherPlayback, installListenTogetherBridge } from "./listenTogether";
+import { armNaturalEnd, isAutoAdvanceBlocked, noteSeek } from "./listenTogetherState";
 import { useFavorite } from "@/composables/useFavorite";
 import { extractColorFromUrl } from "@/utils/color";
 import { handleError, isSkippableError } from "@/utils/errors";
@@ -295,6 +298,7 @@ const loadTrack = async (
   autoPlay = true,
 ): Promise<void> => {
   if (!track) return;
+  armNaturalEnd();
   // 跳过指定关键词歌曲
   const settings = useSettingsStore();
   if (
@@ -541,8 +545,8 @@ export const seek = async (posMs: number): Promise<void> => {
   // 歌曲加载中 seek 无意义：引擎此刻没有可 seek 的解码线程，
   // 且 seekTarget 残留会让加载完成后的 position 推送被持续丢弃
   if (status.trackLoading) return;
+  noteSeek();
   // 先冻结插值，再写入位置
-  playback.setSeeking(true);
   status.position = posMs;
   playback.setCurrentTime(posMs);
 
@@ -563,6 +567,7 @@ export const seek = async (posMs: number): Promise<void> => {
 export const markSeek = (posMs: number): void => {
   const status = useStatusStore();
   if (status.trackLoading) return;
+  noteSeek();
   playback.setSeeking(true);
   status.position = posMs;
   playback.setCurrentTime(posMs);
@@ -831,8 +836,8 @@ export const nextTrack = async (autoPlay = true): Promise<void> => {
   if (queue.queueLength.value === 0) return;
   // 到末尾了
   if (status.playIndex >= queue.queueLength.value - 1) {
-    if (status.shuffleMode === "on" && queue.queueLength.value > 1) {
-      // 重新洗牌产生新顺序，当前歌在 index 0，从 1 开始避免重复
+    // 一起听进房后按房间列表顺序前进，不能在末尾把队列重新洗牌
+    if (!isAutoAdvanceBlocked() && status.shuffleMode === "on" && queue.queueLength.value > 1) {
       queue.shuffleQueue(status.playIndex);
       status.playIndex = 1;
     } else {
@@ -842,6 +847,57 @@ export const nextTrack = async (autoPlay = true): Promise<void> => {
     status.playIndex++;
   }
   await loadTrack(status.currentTrack, status.currentPlaybackContext, autoPlay);
+};
+
+/** 一起听切到队列里的一首。先无声加载，再落到指定进度，避免先播出错误位置 */
+const playListenTogetherTrack = async (
+  track: Track,
+  same: boolean,
+  positionMs: number,
+  playing: boolean,
+): Promise<void> => {
+  if (!same) {
+    await loadTrack(track, useStatusStore().currentPlaybackContext, false);
+    if (useMediaStore().track?.id !== track.id) throw new Error("加载歌曲失败");
+  }
+  if (positionMs > 0) await seek(positionMs);
+  if (playing) await play();
+  else if (useStatusStore().isPlaying) await pause();
+};
+
+/** 一起听选中队列中的网易云歌曲 */
+const selectListenTogether = async (
+  index: number,
+  positionMs: number,
+  playing: boolean,
+): Promise<void> => {
+  const status = useStatusStore();
+  const track = queue.getTrack(index);
+  if (!track) throw new Error("目标歌曲不在播放队列中");
+  status.fmMode = false;
+  const same =
+    index === status.playIndex && useMediaStore().track?.id === track.id && !status.trackLoading;
+  if (!same) status.playIndex = index;
+  await playListenTogetherTrack(track, same, positionMs, playing);
+};
+
+/** 一起听用房间曲目替换整个队列，并停在指定的一首 */
+const replaceListenTogetherQueue = async (
+  tracks: readonly Track[],
+  index: number,
+  positionMs: number,
+  playing: boolean,
+): Promise<void> => {
+  const status = useStatusStore();
+  const track = tracks[index];
+  if (!track) throw new Error("目标歌曲不在播放队列中");
+  const current = useMediaStore().track;
+  const same = current?.id === track.id && current.source === track.source && !status.trackLoading;
+  queue.setQueue(tracks);
+  status.heartMode = false;
+  status.fmMode = false;
+  status.playIndex = index;
+  await playListenTogetherTrack(track, same, positionMs, playing);
 };
 
 /**
@@ -1178,6 +1234,16 @@ export const initPlayer = async (): Promise<void> => {
   unsubscribe = window.api.player.onEvent(handleEvent);
   // 安装播放统计累加器
   installPlayStats();
+  bindListenTogetherPlayback({
+    play,
+    pause,
+    seek,
+    next: () => nextTrack(true),
+    select: selectListenTogether,
+    replace: replaceListenTogetherQueue,
+  });
+  installListenTogetherBridge();
+  useListenTogetherStore();
   // 订阅主进程下发的歌词偏移变化
   const media = useMediaStore();
   // 当前歌曲喜欢状态变化时同步到托盘菜单

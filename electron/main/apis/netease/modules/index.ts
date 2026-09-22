@@ -69,6 +69,7 @@ import song_wiki_info from "./song_wiki_info";
 import playmode_intelligence from "./playmode_intelligence";
 import personal_fm from "./personal_fm";
 import fm_trash from "./fm_trash";
+import listen_together from "./listen_together";
 import scrobble from "./scrobble";
 import scrobble_v1 from "./scrobble_v1";
 
@@ -164,6 +165,7 @@ export const modules: Record<string, NeteaseModule> = {
   playmode_intelligence,
   personal_fm,
   personal_fm_mode: personal_fm,
+  listen_together,
   fm_trash,
   scrobble,
   scrobble_v1,

@@ -469,6 +469,28 @@
       "modeTooltip": "FM 模式与场景",
       "modeSettingsTip": "选择喜好的推荐模式与场景"
     },
+    "listenTogether": {
+      "title": "一起听",
+      "idle": "尚未加入房间",
+      "listening": "{n} 人正在一起听",
+      "listeningNow": "正在一起听",
+      "hint": "我的耳机分你一半，和我一起听歌吧。创建房间后把网易云邀请链接发给好友，或粘贴对方的链接加入",
+      "placeholder": "邀请链接或房间 ID",
+      "create": "创建房间",
+      "join": "加入房间",
+      "copy": "复制邀请",
+      "leave": "退出房间",
+      "toast": {
+        "created": "一起听房间已创建",
+        "joined": "已加入一起听",
+        "left": "已退出一起听",
+        "restored": "正在一起听",
+        "remoteProgress": "对方调整了播放进度",
+        "remoteTrack": "对方切换了歌曲",
+        "remotePlay": "对方开始播放",
+        "remotePause": "对方暂停了播放"
+      }
+    },
     "lyricOffset": {
       "title": "歌词偏移",
       "hint": "正值为歌词提前，单位毫秒"

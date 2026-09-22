@@ -3,12 +3,15 @@ import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
 import { useStatusStore } from "@/stores/status";
 import { useSettingsStore } from "@/stores/settings";
 import * as player from "@/core/player";
+import ListenTogetherDialog from "@/components/player/ListenTogetherDialog.vue";
+import { useListenTogetherStore } from "@/stores/listenTogether";
 import IconLucideSliders from "~icons/lucide/sliders-horizontal";
 import IconLucideGauge from "~icons/lucide/gauge";
 import IconLucideMoreVertical from "~icons/lucide/more-vertical";
 import IconLucideClock from "~icons/lucide/clock";
 import IconLucideRepeat2 from "~icons/lucide/repeat-2";
 import IconLucideRadio from "~icons/lucide/radio";
+import IconLucideUsers from "~icons/lucide/users";
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +25,8 @@ const { t } = useI18n();
 const status = useStatusStore();
 const settings = useSettingsStore();
 const { isDesktopLyricOpen } = storeToRefs(settings);
+const listenTogether = useListenTogetherStore();
+const { view: listenTogetherView, open: listenTogetherOpen } = storeToRefs(listenTogether);
 
 const buttonType = computed<"default" | "cover">(() => (props.cover ? "cover" : "default"));
 const mutedClass = computed(() => (props.cover ? "text-cover/50" : "text-on-surface-variant"));
@@ -124,6 +129,17 @@ const onMoreMenuSelect = (key: string): void => {
     >
       <template #icon><IconLucideCaptions /></template>
     </SButton>
+    <SButton
+      :type="listenTogetherView.inRoom ? (cover ? 'cover' : 'primary') : buttonType"
+      :variant="listenTogetherView.inRoom ? 'tertiary' : 'ghost'"
+      circle
+      size="large"
+      :class="listenTogetherView.inRoom ? undefined : mutedClass"
+      :title="t('player.listenTogether.title')"
+      @click="listenTogetherOpen = true"
+    >
+      <template #icon><IconLucideUsers /></template>
+    </SButton>
     <!-- 私人 FM 模式调整 -->
     <SButton
       v-if="status.fmMode"
@@ -189,5 +205,6 @@ const onMoreMenuSelect = (key: string): void => {
     <AbLoopDialog v-model:open="abLoopOpen" />
     <AutoCloseDialog v-model:open="autoCloseOpen" />
     <FmModeDialog v-model:open="fmModeOpen" />
+    <ListenTogetherDialog v-model:open="listenTogetherOpen" />
   </div>
 </template>

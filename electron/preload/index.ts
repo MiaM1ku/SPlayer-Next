@@ -13,6 +13,12 @@ import type { HotkeyActionId, HotkeyBinding, HotkeyConflict } from "@shared/type
 import type { LoadOptions, TrackSource } from "@shared/types/player";
 import type { StreamingServerInput } from "@shared/types/streaming";
 import type { RecognitionConfig, RecognitionEvent } from "@shared/types/recognition";
+import type {
+  ListenTogetherReply,
+  ListenTogetherRequest,
+  ListenTogetherToast,
+  ListenTogetherView,
+} from "@shared/types/listenTogether";
 import type { PlayEventInput, FavoriteEventInput } from "@shared/types/stats";
 import type { TagEditRequest } from "@shared/types/tagEditor";
 import type { UpdateEvent } from "@shared/types/update";
@@ -655,6 +661,19 @@ const api = {
     // 同步喜欢
     love: (artist: string, track: string, loved: boolean) =>
       ipcRenderer.invoke("lastfm:love", artist, track, loved),
+  },
+  listenTogether: {
+    getView: () => ipcRenderer.invoke("listen-together:getView"),
+    create: () => ipcRenderer.invoke("listen-together:create"),
+    join: (invitation: string) => ipcRenderer.invoke("listen-together:join", invitation),
+    leave: () => ipcRenderer.invoke("listen-together:leave"),
+    onView: (callback: (view: ListenTogetherView) => void) =>
+      subscribe<ListenTogetherView>("listen-together:view", callback),
+    onToast: (callback: (code: ListenTogetherToast) => void) =>
+      subscribe<ListenTogetherToast>("listen-together:toast", callback),
+    onRequest: (callback: (request: ListenTogetherRequest) => void) =>
+      subscribe<ListenTogetherRequest>("listen-together:request", callback),
+    reply: (reply: ListenTogetherReply) => ipcRenderer.send("listen-together:reply", reply),
   },
   externalApi: {
     // 重启外部 API 服务
