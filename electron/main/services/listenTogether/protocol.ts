@@ -98,6 +98,8 @@ interface ErrorCause {
 const wire = <T>(value: unknown): T =>
   typeof value === "object" && value !== null && !Array.isArray(value) ? (value as T) : ({} as T);
 
+const text = (value: unknown): string => (value == null ? "" : String(value));
+
 /** 去掉控制字符并截断，避免异常服务端文案撑破界面 */
 export const plain = (value: unknown, limit: number): string => {
   let out = "";
